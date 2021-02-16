@@ -8,8 +8,9 @@ project(system_model)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  kalman_filter
   roscpp
+  kalman_filter
+  system_model_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -115,14 +116,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/system_model.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/${PROJECT_NAME}/system_model.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
