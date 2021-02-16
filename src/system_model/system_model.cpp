@@ -18,27 +18,17 @@ system_model_t::system_model_t(uint32_t n_variables, uint32_t n_observers)
 
     // Read parameters.
     ros::NodeHandle private_node("~");
-    system_model_t::p_loop_rate = private_node.param<double_t>("loop_rate", 100);
+    
 
-    // Get variable names.
-    auto m_variable_names = variable_names();
-    // Set default names for unnamed variables.
-    uint32_t n_variable_names = m_variable_names.size();
-    m_variable_names.reserve(n_variables);
-    for(uint32_t i = n_variable_names; i < n_variables; ++i)
+    // Set up default variable names.
+    system_model_t::m_variable_names.reserve(n_variables);
+    for(uint32_t i = 0; i < n_variables; ++i)
     {
-        m_variable_names.push_back(std::to_string(i));
+        system_model_t::m_variable_names.push_back(std::to_string(i));
     }
 
-    // Set up state publishers using variable names.
-    system_model_t::m_state_publishers.reserve(system_model_t::n_variables());
-    for(uint32_t i = 0; i < system_model_t::n_variables(); ++i)
-    {
-        // Set up topic name.
-        std::string topic_name = ros::names::remap(ros::names::append("state", m_variable_names.at(i)));
-        // Publish topic.
-        system_model_t::m_state_publishers.push_back(private_node.advertise<system_model_msgs::variable>(topic_name, 10));
-    }
+    // Reserve space for state publishers.
+    system_model_t::m_state_publishers.reserve(n_variables);
 }
 std::shared_ptr<system_model_t> system_model_t::load_plugin(const std::string& plugin_path)
 {
@@ -85,10 +75,42 @@ std::shared_ptr<system_model_t> system_model_t::load_plugin(const std::string& p
                                            [so_handle](system_model_t* plugin){delete plugin; dlclose(so_handle);});
 }
 
+void system_model_t::set_variable_name(uint32_t index, const std::string& name)
+{
+    // Check if index is valid.
+    if(!(index < system_model_t::m_variable_names.size()))
+    {
+        ROS_ERROR_STREAM("failed to set variable name (variable index " << index << " does not exist)");
+        return;
+    }
+
+    // Check if name is valid as a ROS graph resource name.
+    std::string error;
+    if(!ros::names::validate(name, error))
+    {
+        ROS_ERROR_STREAM("failed to set variable name (variable name is invalid: " << error << ")");
+        return;
+    }
+
+    // Update variable name.
+    system_model_t::m_variable_names.at(index) = name;
+}
+
 void system_model_t::run()
 {
+    // Bring up state publishers.
+    ros::NodeHandle private_node("~");
+    for(uint32_t i = 0; i < system_model_t::n_variables(); ++i)
+    {
+        // Set up topic name.
+        std::string topic_name = ros::names::remap(ros::names::append("state", system_model_t::m_variable_names.at(i)));
+        // Publish topic.
+        system_model_t::m_state_publishers.push_back(private_node.advertise<system_model_msgs::variable>(topic_name, 10));
+    }
+
     // Set up the loop rate timer.
-    ros::Rate loop(system_model_t::p_loop_rate);
+    double_t p_loop_rate = private_node.param<double_t>("loop_rate", 100);
+    ros::Rate loop(p_loop_rate);
 
     // Initialize dt calculation.
     ros::Time update_timestamp = ros::Time::now();
@@ -122,6 +144,9 @@ void system_model_t::run()
         // Sleep for remaining loop time.
         loop.sleep();
     }
+
+    // Shutdown publishers.
+    system_model_t::m_state_publishers.clear();
 }
 
 double_t system_model_t::dt() const

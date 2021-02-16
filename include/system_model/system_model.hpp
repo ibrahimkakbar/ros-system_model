@@ -22,15 +22,18 @@ public:
 protected:
     std::unique_ptr<ros::NodeHandle> m_node;
 
-    virtual std::vector<std::string> variable_names() const = 0;
+    /// \brief Sets the name of a variable in the state.
+    /// \param index The index of the state variable to name.
+    /// \param name The name to give the specified variable (must be ROS graph name compliant).
+    /// \note Variable name changes only take effect at a new call of run().
+    void set_variable_name(uint32_t index, const std::string& name);
 
     double_t dt() const;
 
 private:
-    double_t p_loop_rate;
-
     double_t m_dt;
 
+    std::vector<std::string> m_variable_names;
     std::vector<ros::Publisher> m_state_publishers;
 };
 
