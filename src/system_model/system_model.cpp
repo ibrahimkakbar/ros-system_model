@@ -19,7 +19,6 @@ system_model_t::system_model_t(uint32_t n_variables, uint32_t n_observers)
     // Read parameters.
     ros::NodeHandle private_node("~");
     
-
     // Set up default variable names.
     system_model_t::m_variable_names.reserve(n_variables);
     for(uint32_t i = 0; i < n_variables; ++i)
@@ -29,6 +28,9 @@ system_model_t::system_model_t(uint32_t n_variables, uint32_t n_observers)
 
     // Reserve space for state publishers.
     system_model_t::m_state_publishers.reserve(n_variables);
+
+    // Set initial delta time.
+    system_model_t::m_dt = 0;
 }
 std::shared_ptr<system_model_t> system_model_t::load_plugin(const std::string& plugin_path)
 {
@@ -75,6 +77,7 @@ std::shared_ptr<system_model_t> system_model_t::load_plugin(const std::string& p
                                            [so_handle](system_model_t* plugin){delete plugin; dlclose(so_handle);});
 }
 
+// METHODS
 void system_model_t::set_variable_name(uint32_t index, const std::string& name)
 {
     // Check if index is valid.
@@ -95,7 +98,6 @@ void system_model_t::set_variable_name(uint32_t index, const std::string& name)
     // Update variable name.
     system_model_t::m_variable_names.at(index) = name;
 }
-
 void system_model_t::run()
 {
     // Bring up state publishers.
@@ -148,7 +150,6 @@ void system_model_t::run()
     // Shutdown publishers.
     system_model_t::m_state_publishers.clear();
 }
-
 double_t system_model_t::dt() const
 {
     return system_model_t::m_dt;
