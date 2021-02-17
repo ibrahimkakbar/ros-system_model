@@ -57,6 +57,8 @@ private:
     std::vector<ros::Publisher> m_state_publishers;
 };
 
+/// \brief Registers a plugin for loading.
+/// \param class_name The name of the class definition for the plugin class.
 #define REGISTER_PLUGIN(class_name) extern "C" class_name* instantiate() {return new class_name();}
 
 }
