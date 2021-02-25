@@ -20,10 +20,12 @@ include_directories(
 
 # Build the system_model plugin library.
 add_library(${PROJECT_NAME} src/${PROJECT_NAME}/system_model.cpp)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 # Build the system_model node.
 add_executable(${PROJECT_NAME}_node src/system_model/main.cpp)
 set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node
   ${PROJECT_NAME}
   ${catkin_LIBRARIES})
